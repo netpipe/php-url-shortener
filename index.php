@@ -1,6 +1,7 @@
 <?php
 
 require_once "functions.php";
+require_once "config.php";
 
 $slug = "";
 
@@ -9,9 +10,10 @@ if (isset($_SERVER['REQUEST_URI']) && slugMeetsRequirements($_SERVER['REQUEST_UR
     goToUrl($slug);
 }
 
-if (isset($_POST['url']) && isset($_POST['password']) && $_POST['password'] === PASS && urlIsCorrect($_POST['url']) && !urlAlreadyShortened($_POST['url'])) {
+if (isset($_POST['url']) && isset($_POST['password']) && $_POST['password'] === PASSWORD && urlIsCorrect($_POST['url']) && !urlAlreadyShortened($_POST['url'])) {
     $slug = addUrlToDatabase($_POST['url']);
-    header("Location: " . BASE . "/?slug=" . $slug);
+    header("Location: " . BASE_URL . "/?slug=" . $slug);
+    exit();
 }
 
 if (isset($_GET['slug'])) {
@@ -24,9 +26,8 @@ if (isset($_GET['slug'])) {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="">
-    <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
     <meta name="generator" content="Hugo 0.80.0">
-    <title>URL shortener - link.that.ee</title>
+    <title>URL shortener</title>
 
     <!-- Bootstrap core CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" integrity="sha384-B0vP5xmATw1+K9KRQjQERJvTumQW0nPEzvF6L/Z6nronJ3oUOFUFpCjEUQouq2+l" crossorigin="anonymous">
@@ -58,7 +59,7 @@ if (isset($_GET['slug'])) {
     <div class="form-label-group mb-3">
         <?php
         if (isset($_GET['slug'])) {
-            echo "Just created: <code>" . BASE . "/$slug</code>";
+            echo "Just created: <code>" . BASE_URL . "/$slug</code>";
         }
         ?>
     </div>

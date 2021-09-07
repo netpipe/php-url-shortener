@@ -6,5 +6,5 @@ CREATE TABLE link (
     created_at TEXT,
     lifetime INTEGER,
     last_access TEXT,
-    clicks INTEGER
+    hits INTEGER
 );

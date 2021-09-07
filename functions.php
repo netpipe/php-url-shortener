@@ -1,11 +1,6 @@
 <?php
 
-// Configuration
-
-const PASS = "yourPassword";
-const SLUG_LEN = 4;
-const BASE = "https://link.that.ee";
-//const BASE = "http://localhost:8080";
+require_once "config.php";
 
 function getUniqueRandomString($length) : string {
 
@@ -30,13 +25,14 @@ function goToUrl($key) {
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
     if (isset($row['key']) && $row['key'] === $key) {
 
-        $sql = "UPDATE link Set last_access = :last_access, clicks = clicks + 1 WHERE key = :key";
+        $sql = "UPDATE link Set last_access = :last_access, hits = hits + 1 WHERE key = :key";
         $stmt = $conn->prepare($sql);
         $last_access = date('Y-m-d H:i:s');
         $stmt->bindParam(':key', $key);
         $stmt->bindParam(':last_access', $last_access);
         $stmt->execute();
-        header("Location: " . $row['url']);
+        header("Location: " . $row['url'], true, 302);
+        exit(); // https://stackoverflow.com/questions/768431/how-do-i-make-a-redirect-in-php
     }
 
 }
@@ -51,8 +47,8 @@ function urlAlreadyShortened($url) : bool {
 
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         if ($row['url'] === $url) {
-            header("Location: " . BASE . "/?slug=" . $row['key']);
-            return true;
+            header("Location: " . BASE_URL . "/?slug=" . $row['key']);
+            exit();
         }
     }
     return false;
@@ -104,7 +100,7 @@ function addUrlToDatabase($u) : string {
     $created_at = date('Y-m-d H:i:s');
 
     $conn = getConnection();
-    $sql = "INSERT INTO link (key, url, created_at, lifetime, last_access, clicks) 
+    $sql = "INSERT INTO link (key, url, created_at, lifetime, last_access, hits) 
             VALUES (:key, :url, :created_at, null, null, 0)";
     $stmt = $conn->prepare($sql);
     $stmt->bindParam(':key', $key);
