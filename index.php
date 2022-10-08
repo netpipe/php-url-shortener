@@ -5,14 +5,19 @@ require_once "config.php";
 
 $slug = "";
 
-if (isset($_SERVER['REQUEST_URI']) && slugMeetsRequirements($_SERVER['REQUEST_URI'])) {
-    $slug = substr(trim($_SERVER['REQUEST_URI'], "/"), 0, SLUG_LEN);
+
+        if (isset($_GET['GoToURL'])) {
+    // var_dump($_SERVER['REQUEST_URI']);
+   //  $slug = substr(trim($_SERVER['REQUEST_URI'], "/"), 0, 6);
+    $slug = ltrim($_GET['GoToURL'], DELETE_URL);
+    // var_dump($slug);
     goToUrl($slug);
 }
 
-if (isset($_POST['url']) && isset($_POST['password']) && $_POST['password'] === PASSWORD && urlIsCorrect($_POST['url']) && !urlAlreadyShortened($_POST['url'])) {
+if (isset($_POST['url']) && urlIsCorrect($_POST['url']) && !urlAlreadyShortened($_POST['url'])) {
     $slug = addUrlToDatabase($_POST['url']);
-    header("Location: " . BASE_URL . "/?slug=" . $slug);
+    // var_dump("success");
+    header("Location: " . BASE_URL . "/index.php?slug=" . $slug);
     exit();
 }
 
@@ -49,17 +54,9 @@ if (isset($_GET['slug'])) {
 
     </div>
     <div class="form-label-group mb-3">
-        <input type="password" name="password" id="password" class="form-control" placeholder="Password" required>
-        <label for="password">Password</label>
-        <small id="passwordHelp" class="form-text text-muted">
-            If you want to use it then you need password. If you don't have password then probably
-            it would be good to set up your own. See the git repo.
-        </small>
-    </div>
-    <div class="form-label-group mb-3">
         <?php
         if (isset($_GET['slug'])) {
-            echo "Just created: <code>" . BASE_URL . "/$slug</code>";
+            echo "Just created: <code>" . BASE_URL . "/php-url-shortener-main/?GoToURL=$slug</code>";
         }
         ?>
     </div>

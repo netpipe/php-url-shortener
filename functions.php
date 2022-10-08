@@ -15,6 +15,22 @@ function getUniqueRandomString($length) : string {
     return $randomString;
 }
 
+function randomStringIsUnique($key) : bool {
+
+    $conn = getConnection();
+    $sql = "SELECT key FROM link WHERE key = :key";
+    $stmt = $conn->prepare($sql);
+    $stmt->bindParam(':key', $key);
+    $stmt->execute();
+
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        if ($row['key'] === $key) {
+            return false;
+        }
+    }
+    return true;
+}
+
 function goToUrl($key) {
 
     $conn = getConnection();
@@ -47,7 +63,7 @@ function urlAlreadyShortened($url) : bool {
 
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         if ($row['url'] === $url) {
-            header("Location: " . BASE_URL . "/?slug=" . $row['key']);
+            header("Location: " . BASE_URL . "/php-url-shortener-main/index.php?slug=" . $row['key']);
             exit();
         }
     }
@@ -58,22 +74,6 @@ function urlIsCorrect($url) : bool {
 
     $startsWithHttp = preg_match("/^(https?:\/\/)(\S*)$/m", trim($url));
     return $startsWithHttp === 1;
-}
-
-function randomStringIsUnique($key) : bool {
-
-    $conn = getConnection();
-    $sql = "SELECT key FROM link WHERE key = :key";
-    $stmt = $conn->prepare($sql);
-    $stmt->bindParam(':key', $key);
-    $stmt->execute();
-
-    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-        if ($row['key'] === $key) {
-            return false;
-        }
-    }
-    return true;
 }
 
 function slugMeetsRequirements($slug) : bool {
