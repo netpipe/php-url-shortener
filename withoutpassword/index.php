@@ -5,13 +5,11 @@ require_once "config.php";
 
 $slug = "";
 
-        if (isset($_GET['GoToURL'])) {
-    // var_dump($_SERVER['REQUEST_URI']);
-   //  $slug = substr(trim($_SERVER['REQUEST_URI'], "/"), 0, 6);
-    $slug = ltrim($_GET['GoToURL'], DELETE_URL);
-    // var_dump($slug);
+if (isset($_SERVER['REQUEST_URI']) && slugMeetsRequirements($_SERVER['REQUEST_URI'])) {
+    $slug = substr(trim($_SERVER['REQUEST_URI'], "/"), 0, SLUG_LEN);
     goToUrl($slug);
 }
+
 if (isset($_POST['url']) && isset($_POST['password']) && $_POST['password'] === PASSWORD && urlIsCorrect($_POST['url']) && !urlAlreadyShortened($_POST['url'])) {
     $slug = addUrlToDatabase($_POST['url']);
     header("Location: " . BASE_URL . "/?slug=" . $slug);
@@ -61,7 +59,7 @@ if (isset($_GET['slug'])) {
     <div class="form-label-group mb-3">
         <?php
         if (isset($_GET['slug'])) {
-            echo "Just created: <code>" . BASE_URL . "/php-url-shortener-main/?GoToURL=$slug</code>";
+            echo "Just created: <code>" . BASE_URL . "/$slug</code>";
         }
         ?>
     </div>
