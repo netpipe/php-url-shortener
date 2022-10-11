@@ -1,5 +1,6 @@
 <?php
-
+       ini_set("display_errors",1);
+       error_reporting(E_ALL);
 require_once "functions.php";
 require_once "config.php";
 
@@ -14,7 +15,7 @@ $slug = "";
 }
 if (isset($_POST['url']) && isset($_POST['password']) && $_POST['password'] === PASSWORD && urlIsCorrect($_POST['url']) && !urlAlreadyShortened($_POST['url'])) {
     $slug = addUrlToDatabase($_POST['url']);
-    header("Location: " . BASE_URL . "/?slug=" . $slug);
+    header("Location: " . BASE_URL . "/php-url-shortener-main/?slug=" . $slug);
     exit();
 }
 
@@ -38,14 +39,15 @@ if (isset($_GET['slug'])) {
     <link href="styles.css" rel="stylesheet">
 </head>
 <body>
-
+         <input type="text" id="currencyVal" value="123" /> <button class="btn" onclick="copyvalue()">boo!</button><br />
+        
 <form class="form-shorten-url" action="index.php" method="post">
     <div class="text-center mb-4">
         <h1 class="h3 mb-3 font-weight-normal"><a href="https://link.that.ee" class="text-reset">URL shortener</a></h1>
         <p>Shorten urls. Github repo can be found here.</a></p>
     </div>
     <div class="form-label-group">
-        <input type="text" id="url"  name="url" class="form-control" placeholder="URL to shorten" required autofocus>
+        <input type="text" id="url"  name="url" class="form-control" placeholder="URL to shorten" required autofocus readonly>
         <label for="url">URL to shorten</label>
         <small id="urlHelp" class="form-text text-muted">Needs to begin with https:// or http://</small>
 
@@ -63,6 +65,7 @@ if (isset($_GET['slug'])) {
         if (isset($_GET['slug'])) {
             echo "Just created: <code>" . BASE_URL . "/php-url-shortener-main/?GoToURL=$slug</code>";
         }
+//echo str_replace('||', 'a', "https://www.tutori||lrepublic.com");
         ?>
     </div>
 
@@ -70,5 +73,29 @@ if (isset($_GET['slug'])) {
 
 </form>
 
+    <script type="text/javascript">
+
+        let currencyval = document.getElementById("currencyVal");
+        let currencyCopy = document.getElementById("url");
+             //   var myStr = 'quick_brown_fox';
+       // var newStr = myStr.replace(/_/g, "-");
+      //  
+        function copyvalue() {
+var newStr = currencyval.value.replace(/a/g, "||");
+//var newStr =encryptMe(currencyval.value,"test");
+            currencyCopy.value = newStr; //currencyval.value;
+            console.log(currencyCopy.value);
+        }
+        
+            function encryptMe(mes,key) {
+      return CryptoJS.AES.encrypt(mes,key);
+    };
+
+    function decryptMe(mes,key) {
+      var bytes = CryptoJS.AES.decrypt(mes, key);
+      return bytes.toString(CryptoJS.enc.Utf8);
+    };
+    
+    </script>
 </body>
 </html>

@@ -1,6 +1,58 @@
 <?php
 
 require_once "config.php";
+//https://dev.to/manuthecoder/really-simple-encryption-in-php-3kk9
+define("encryption_method", "AES-128-CBC");
+define("key", "test");
+function encrypt($data) {
+    $key = key;
+    $plaintext = $data;
+    $ivlen = openssl_cipher_iv_length($cipher = encryption_method);
+    $iv = openssl_random_pseudo_bytes($ivlen);
+    $ciphertext_raw = openssl_encrypt($plaintext, $cipher, $key, $options = OPENSSL_RAW_DATA, $iv);
+    $hmac = hash_hmac('sha256', $ciphertext_raw, $key, $as_binary = true);
+    $ciphertext = base64_encode($iv . $hmac . $ciphertext_raw);
+    return $ciphertext;
+}
+function decrypt($data) {
+    $key = key;
+    $c = base64_decode($data);
+    $ivlen = openssl_cipher_iv_length($cipher = encryption_method);
+    $iv = substr($c, 0, $ivlen);
+    $hmac = substr($c, $ivlen, $sha2len = 32);
+    $ciphertext_raw = substr($c, $ivlen + $sha2len);
+    $original_plaintext = openssl_decrypt($ciphertext_raw, $cipher, $key, $options = OPENSSL_RAW_DATA, $iv);
+    $calcmac = hash_hmac('sha256', $ciphertext_raw, $key, $as_binary = true);
+    if (hash_equals($hmac, $calcmac))
+    {
+        return $original_plaintext;
+    }
+}
+
+
+function encryptAES($plaintext, $password) {
+    $method = "AES-256-CBC";
+    $key = hash('sha256', $password, true);
+    $iv = openssl_random_pseudo_bytes(16);
+
+    $ciphertext = openssl_encrypt($plaintext, $method, $key, OPENSSL_RAW_DATA, $iv);
+    $hash = hash_hmac('sha256', $ciphertext . $iv, $key, true);
+
+    return $iv . $hash . $ciphertext;
+}
+
+function decryptAES($ivHashCiphertext, $password) {
+    $method = "AES-256-CBC";
+    $iv = substr($ivHashCiphertext, 0, 16);
+    $hash = substr($ivHashCiphertext, 16, 32);
+    $ciphertext = substr($ivHashCiphertext, 48);
+    $key = hash('sha256', $password, true);
+
+    if (!hash_equals(hash_hmac('sha256', $ciphertext . $iv, $key, true), $hash)) return null;
+
+    return openssl_decrypt($ciphertext, $method, $key, OPENSSL_RAW_DATA, $iv);
+}
+
 
 function getUniqueRandomString($length) : string {
 
@@ -47,7 +99,8 @@ function goToUrl($key) {
         $stmt->bindParam(':key', $key);
         $stmt->bindParam(':last_access', $last_access);
         $stmt->execute();
-        header("Location: " . $row['url'], true, 302);
+        header("Location: " . str_replace('||', 'a', decrypt($row['url'])), true, 302);
+      //  header("Location: " . decrypt($row['url']), true, 302);
         exit(); // https://stackoverflow.com/questions/768431/how-do-i-make-a-redirect-in-php
     }
 
@@ -96,7 +149,7 @@ function getConnection() : PDO {
 function addUrlToDatabase($u) : string {
 
     $key = getUniqueRandomString(SLUG_LEN);
-    $url = substr($u, 0, 2048);
+    $url = encrypt(substr($u, 0, 2048));
     $created_at = date('Y-m-d H:i:s');
 
     $conn = getConnection();

@@ -2,6 +2,34 @@
 
 require_once "config.php";
 
+define("encryption_method", "AES-128-CBC");
+define("key", "your_amazing_key_here");
+function encrypt($data) {
+    $key = key;
+    $plaintext = $data;
+    $ivlen = openssl_cipher_iv_length($cipher = encryption_method);
+    $iv = openssl_random_pseudo_bytes($ivlen);
+    $ciphertext_raw = openssl_encrypt($plaintext, $cipher, $key, $options = OPENSSL_RAW_DATA, $iv);
+    $hmac = hash_hmac('sha256', $ciphertext_raw, $key, $as_binary = true);
+    $ciphertext = base64_encode($iv . $hmac . $ciphertext_raw);
+    return $ciphertext;
+}
+function decrypt($data) {
+    $key = key;
+    $c = base64_decode($data);
+    $ivlen = openssl_cipher_iv_length($cipher = encryption_method);
+    $iv = substr($c, 0, $ivlen);
+    $hmac = substr($c, $ivlen, $sha2len = 32);
+    $ciphertext_raw = substr($c, $ivlen + $sha2len);
+    $original_plaintext = openssl_decrypt($ciphertext_raw, $cipher, $key, $options = OPENSSL_RAW_DATA, $iv);
+    $calcmac = hash_hmac('sha256', $ciphertext_raw, $key, $as_binary = true);
+    if (hash_equals($hmac, $calcmac))
+    {
+        return $original_plaintext;
+    }
+}
+
+
 function getUniqueRandomString($length) : string {
 
     $characters = 'abcdefghijklmnopqrstuvwxyz';
@@ -13,6 +41,22 @@ function getUniqueRandomString($length) : string {
         return getUniqueRandomString($length);
     }
     return $randomString;
+}
+
+function randomStringIsUnique($key) : bool {
+
+    $conn = getConnection();
+    $sql = "SELECT key FROM link WHERE key = :key";
+    $stmt = $conn->prepare($sql);
+    $stmt->bindParam(':key', $key);
+    $stmt->execute();
+
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        if ($row['key'] === $key) {
+            return false;
+        }
+    }
+    return true;
 }
 
 function goToUrl($key) {
@@ -31,7 +75,7 @@ function goToUrl($key) {
         $stmt->bindParam(':key', $key);
         $stmt->bindParam(':last_access', $last_access);
         $stmt->execute();
-        header("Location: " . $row['url'], true, 302);
+        header("Location: " . decrypt($row['url']), true, 302);
         exit(); // https://stackoverflow.com/questions/768431/how-do-i-make-a-redirect-in-php
     }
 
@@ -47,7 +91,7 @@ function urlAlreadyShortened($url) : bool {
 
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         if ($row['url'] === $url) {
-            header("Location: " . BASE_URL . "/?slug=" . $row['key']);
+            header("Location: " . BASE_URL . "/php-url-shortener-main/index.php?slug=" . $row['key']);
             exit();
         }
     }
@@ -58,22 +102,6 @@ function urlIsCorrect($url) : bool {
 
     $startsWithHttp = preg_match("/^(https?:\/\/)(\S*)$/m", trim($url));
     return $startsWithHttp === 1;
-}
-
-function randomStringIsUnique($key) : bool {
-
-    $conn = getConnection();
-    $sql = "SELECT key FROM link WHERE key = :key";
-    $stmt = $conn->prepare($sql);
-    $stmt->bindParam(':key', $key);
-    $stmt->execute();
-
-    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-        if ($row['key'] === $key) {
-            return false;
-        }
-    }
-    return true;
 }
 
 function slugMeetsRequirements($slug) : bool {
@@ -96,7 +124,7 @@ function getConnection() : PDO {
 function addUrlToDatabase($u) : string {
 
     $key = getUniqueRandomString(SLUG_LEN);
-    $url = substr($u, 0, 2048);
+    $url = encrypt(substr($u, 0, 2048));
     $created_at = date('Y-m-d H:i:s');
 
     $conn = getConnection();
