@@ -39,7 +39,7 @@ if (isset($_GET['slug'])) {
     <link href="styles.css" rel="stylesheet">
 </head>
 <body>
-         <input type="text" id="currencyVal" value="123" /> <button class="btn" onclick="copyvalue()">boo!</button><br />
+         <input type="text" id="currencyVal" value="123"  maxlength="12" > <button class="btn" onclick="copyvalue()">loadURL!</button><br>
         
 <form class="form-shorten-url" action="index.php" method="post">
     <div class="text-center mb-4">
@@ -53,7 +53,7 @@ if (isset($_GET['slug'])) {
 
     </div>
     <div class="form-label-group mb-3">
-        <input type="password" name="password" id="password" class="form-control" placeholder="Password" required>
+        <input type="password" name="password" id="password" class="form-control"  maxlength="12" placeholder="Password" required>
         <label for="password">Password</label>
         <small id="passwordHelp" class="form-text text-muted">
             If you want to use it then you need password. If you don't have password then probably
